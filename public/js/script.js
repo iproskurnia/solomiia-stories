@@ -1,0 +1,105 @@
+let stories = [];
+let favorites = [];
+
+function showSection(sectionId) {
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(section => {
+        section.style.display = section.id === sectionId ? 'block' : 'none';
+    });
+}
+
+async function generateStory() {
+    const storyPrompt = document.getElementById('story-prompt').value;
+    const imagePrompt = document.getElementById('image-prompt').value;
+    const imageInput = document.getElementById('image');
+    const formData = new FormData();
+
+    formData.append('prompt', storyPrompt);
+    if (imageInput.files[0]) {
+        formData.append('image', imageInput.files[0]);
+    }
+    formData.append('imagePrompt', imagePrompt);
+
+    try {
+        const response = await fetch('/generate-story', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.story && data.imageUrl) {
+            stories.push({ title: data.title, content: data.story, imageUrl: data.imageUrl });
+            updateStoryList();
+        } else {
+            alert('Не вдалося згенерувати казку');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Сталася помилка');
+    }
+}
+
+function updateStoryList() {
+    const storyList = document.getElementById('story-list');
+    storyList.innerHTML = '';
+    stories.forEach((story, index) => {
+        const li = document.createElement('li');
+        li.textContent = story.title;
+        li.onclick = () => showStoryDetail(index);
+        storyList.appendChild(li);
+    });
+}
+
+function showStoryDetail(index) {
+    const story = stories[index];
+    document.getElementById('story-title').textContent = story.title;
+    document.getElementById('story-content').textContent = story.content;
+    const storyImg = document.getElementById('story-img');
+    storyImg.src = story.imageUrl;
+    storyImg.style.display = 'block';
+    showSection('story-detail');
+}
+
+function addToFavorites() {
+    const title = document.getElementById('story-title').textContent;
+    const content = document.getElementById('story-content').textContent;
+    const imageUrl = document.getElementById('story-img').src;
+    const favorite = { title, content, imageUrl };
+    favorites.push(favorite);
+    updateFavoriteList();
+}
+
+function updateFavoriteList() {
+    const favoriteList = document.getElementById('favorite-stories');
+    favoriteList.innerHTML = '';
+    favorites.forEach((story, index) => {
+        const li = document.createElement('li');
+        li.textContent = story.title;
+        li.onclick = () => showFavoriteDetail(index);
+        favoriteList.appendChild(li);
+    });
+}
+
+function showFavoriteDetail(index) {
+    const story = favorites[index];
+    document.getElementById('story-title').textContent = story.title;
+    document.getElementById('story-content').textContent = story.content;
+    const storyImg = document.getElementById('story-img');
+    storyImg.src = story.imageUrl;
+    storyImg.style.display = 'block';
+    showSection('story-detail');
+}
+
+function printStory() {
+    window.print();
+}
+
+function shareStory() {
+    const url = window.location.href;
+    const text = "Подивіться цю чудову казку для Соломії: ";
+    const facebookShare = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    const instagramShare = `https://www.instagram.com/?url=${url}`;
+    const telegramShare = `https://telegram.me/share/url?url=${url}&text=${text}`;
+    window.open(facebookShare, '_blank');
+    window.open(instagramShare, '_blank');
+    window.open(telegramShare, '_blank');
+}

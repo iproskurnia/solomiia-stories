@@ -13,20 +13,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.OPENAI_API_KEY;
 
-// Middleware to serve static files
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 
-// Set up multer for file uploads
 const upload = multer({ dest: 'uploads/' });
 
-// Endpoint to generate image
 app.post('/generate-image', upload.single('image'), async (req, res) => {
     const prompt = req.body.prompt;
     const imagePath = req.file ? req.file.path : null;
 
     try {
-        // Read the image file as a base64 string
         const imageBase64 = imagePath ? fs.readFileSync(imagePath, 'base64') : null;
 
         const response = await axios.post('https://api.openai.com/v1/images/generations', {
@@ -41,7 +37,6 @@ app.post('/generate-image', upload.single('image'), async (req, res) => {
             }
         });
 
-        // Delete the uploaded file after processing (optional)
         if (imagePath) {
             fs.unlinkSync(imagePath);
         }
