@@ -18,7 +18,6 @@ function showSection(sectionId) {
 
 async function generateStory() {
     const storyPrompt = document.getElementById('story-prompt').value;
-    const imagePrompt = document.getElementById('image-prompt').value;
     const imageInput = document.getElementById('image');
     const formData = new FormData();
 
@@ -26,7 +25,6 @@ async function generateStory() {
     if (imageInput.files[0]) {
         formData.append('image', imageInput.files[0]);
     }
-    formData.append('imagePrompt', imagePrompt);
 
     try {
         const response = await fetch('/generate-story', {

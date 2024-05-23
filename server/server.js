@@ -20,11 +20,12 @@ const upload = multer({ dest: 'uploads/' });
 
 app.post('/generate-story', upload.single('image'), async (req, res) => {
     const storyPrompt = req.body.prompt;
-    const imagePrompt = req.body.imagePrompt;
     const imagePath = req.file ? req.file.path : null;
 
     try {
-        const storyResponse = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
+        // Генерація казки
+        const storyResponse = await axios.post('https://api.openai.com/v1/completions', {
+            model: 'text-davinci-003',
             prompt: storyPrompt,
             max_tokens: 500
         }, {
@@ -36,10 +37,11 @@ app.post('/generate-story', upload.single('image'), async (req, res) => {
 
         const story = storyResponse.data.choices[0].text.trim();
 
+        // Генерація зображення
         const imageBase64 = imagePath ? fs.readFileSync(imagePath, 'base64') : null;
 
         const imageData = {
-            prompt: imagePrompt,
+            prompt: storyPrompt,
             n: 1,
             size: "1024x1024"
         };
