@@ -1,10 +1,18 @@
 let stories = [];
 let favorites = [];
 
+document.addEventListener('DOMContentLoaded', () => {
+    loadStories();
+    loadFavorites();
+});
+
 function showSection(sectionId) {
     const sections = document.querySelectorAll('.section');
     sections.forEach(section => {
-        section.style.display = section.id === sectionId ? 'block' : 'none';
+        section.classList.remove('active');
+        if (section.id === sectionId) {
+            section.classList.add('active');
+        }
     });
 }
 
@@ -28,6 +36,7 @@ async function generateStory() {
         const data = await response.json();
         if (data.story && data.imageUrl) {
             stories.push({ title: data.title, content: data.story, imageUrl: data.imageUrl });
+            saveStories();
             updateStoryList();
         } else {
             alert('Не вдалося згенерувати казку');
@@ -65,6 +74,7 @@ function addToFavorites() {
     const imageUrl = document.getElementById('story-img').src;
     const favorite = { title, content, imageUrl };
     favorites.push(favorite);
+    saveFavorites();
     updateFavoriteList();
 }
 
@@ -102,4 +112,28 @@ function shareStory() {
     window.open(facebookShare, '_blank');
     window.open(instagramShare, '_blank');
     window.open(telegramShare, '_blank');
+}
+
+function saveStories() {
+    localStorage.setItem('stories', JSON.stringify(stories));
+}
+
+function loadStories() {
+    const savedStories = localStorage.getItem('stories');
+    if (savedStories) {
+        stories = JSON.parse(savedStories);
+        updateStoryList();
+    }
+}
+
+function saveFavorites() {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+}
+
+function loadFavorites() {
+    const savedFavorites = localStorage.getItem('favorites');
+    if (savedFavorites) {
+        favorites = JSON.parse(savedFavorites);
+        updateFavoriteList();
+    }
 }

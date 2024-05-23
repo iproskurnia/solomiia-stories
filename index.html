@@ -4,117 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Казки для Соломії</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        header {
-            background-color: #6ab04c;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            width: 100%;
-        }
-        nav {
-            width: 200px;
-            background-color: #333;
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            display: flex;
-            flex-direction: column;
-            padding-top: 20px;
-        }
-        nav a {
-            color: white;
-            padding: 15px;
-            text-decoration: none;
-            display: block;
-        }
-        nav a:hover {
-            background-color: #575757;
-        }
-        main {
-            margin-left: 200px;
-            padding: 20px;
-            flex: 1;
-        }
-        .story {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .story h2 {
-            margin-top: 0;
-        }
-        .story img {
-            max-width: 100%;
-            height: auto;
-        }
-        .buttons {
-            margin-top: 20px;
-            text-align: right;
-        }
-        .buttons button {
-            background-color: #6ab04c;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .buttons button:hover {
-            background-color: #58a338;
-        }
-        .prompt-input, .file-input {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <header>
         <h1>Казки для Соломії</h1>
+        <nav>
+            <a href="#home" onclick="showSection('home')">Головна</a>
+            <a href="#stories" onclick="showSection('stories')">Історії</a>
+            <a href="#favorites" onclick="showSection('favorites')">Favorites</a>
+        </nav>
     </header>
-    <nav>
-        <a href="#home" onclick="showSection('home')">Головна</a>
-        <a href="#stories" onclick="showSection('stories')">Історії</a>
-        <a href="#favorites" onclick="showSection('favorites')">Favorites</a>
-    </nav>
     <main>
-        <div id="home" class="section">
+        <div id="home" class="section active">
             <h2>Генерація Казки</h2>
-            <input type="text" id="story-prompt" class="prompt-input" placeholder="Введіть текст для генерації казки" />
-            <input type="text" id="image-prompt" class="prompt-input" placeholder="Введіть текст для генерації зображення" />
-            <input type="file" id="image" class="file-input" accept="image/*" />
+            <div class="form-group">
+                <label for="story-prompt">Текст для генерації казки</label>
+                <input type="text" id="story-prompt" class="prompt-input" placeholder="Введіть текст для генерації казки" />
+            </div>
+            <div class="form-group">
+                <label for="image-prompt">Текст для генерації зображення</label>
+                <input type="text" id="image-prompt" class="prompt-input" placeholder="Введіть текст для генерації зображення" />
+            </div>
+            <div class="form-group">
+                <label for="image">Завантажити зображення</label>
+                <input type="file" id="image" class="file-input" accept="image/*" />
+            </div>
             <div class="buttons">
                 <button onclick="generateStory()">Згенерувати</button>
             </div>
         </div>
-        <div id="stories" class="section" style="display:none;">
+        <div id="stories" class="section">
             <h2>Історії</h2>
             <ul id="story-list">
                 <!-- Список історій буде динамічно заповнюватися тут -->
             </ul>
         </div>
-        <div id="favorites" class="section" style="display:none;">
+        <div id="favorites" class="section">
             <h2>Favorites</h2>
             <ul id="favorite-stories">
                 <!-- Список улюблених історій буде динамічно заповнюватися тут -->
             </ul>
         </div>
-        <div id="story-detail" class="section" style="display:none;">
+        <div id="story-detail" class="section">
             <h2 id="story-title"></h2>
             <img id="story-img" style="max-width: 100%; height: auto; display: none;" />
             <p id="story-content"></p>
@@ -125,112 +57,6 @@
             </div>
         </div>
     </main>
-    <script>
-        let stories = [];
-        let favorites = [];
-
-        function showSection(sectionId) {
-            const sections = document.querySelectorAll('.section');
-            sections.forEach(section => {
-                section.style.display = section.id === sectionId ? 'block' : 'none';
-            });
-        }
-
-        async function generateStory() {
-            const storyPrompt = document.getElementById('story-prompt').value;
-            const imagePrompt = document.getElementById('image-prompt').value;
-            const imageInput = document.getElementById('image');
-            const formData = new FormData();
-
-            formData.append('prompt', storyPrompt);
-            if (imageInput.files[0]) {
-                formData.append('image', imageInput.files[0]);
-            }
-            formData.append('imagePrompt', imagePrompt);
-
-            try {
-                const response = await fetch('/generate-story', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.story && data.imageUrl) {
-                    stories.push({ title: data.title, content: data.story, imageUrl: data.imageUrl });
-                    updateStoryList();
-                } else {
-                    alert('Не вдалося згенерувати казку');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Сталася помилка');
-            }
-        }
-
-        function updateStoryList() {
-            const storyList = document.getElementById('story-list');
-            storyList.innerHTML = '';
-            stories.forEach((story, index) => {
-                const li = document.createElement('li');
-                li.textContent = story.title;
-                li.onclick = () => showStoryDetail(index);
-                storyList.appendChild(li);
-            });
-        }
-
-        function showStoryDetail(index) {
-            const story = stories[index];
-            document.getElementById('story-title').textContent = story.title;
-            document.getElementById('story-content').textContent = story.content;
-            const storyImg = document.getElementById('story-img');
-            storyImg.src = story.imageUrl;
-            storyImg.style.display = 'block';
-            showSection('story-detail');
-        }
-
-        function addToFavorites() {
-            const title = document.getElementById('story-title').textContent;
-            const content = document.getElementById('story-content').textContent;
-            const imageUrl = document.getElementById('story-img').src;
-            const favorite = { title, content, imageUrl };
-            favorites.push(favorite);
-            updateFavoriteList();
-        }
-
-        function updateFavoriteList() {
-            const favoriteList = document.getElementById('favorite-stories');
-            favoriteList.innerHTML = '';
-            favorites.forEach((story, index) => {
-                const li = document.createElement('li');
-                li.textContent = story.title;
-                li.onclick = () => showFavoriteDetail(index);
-                favoriteList.appendChild(li);
-            });
-        }
-
-        function showFavoriteDetail(index) {
-            const story = favorites[index];
-            document.getElementById('story-title').textContent = story.title;
-            document.getElementById('story-content').textContent = story.content;
-            const storyImg = document.getElementById('story-img');
-            storyImg.src = story.imageUrl;
-            storyImg.style.display = 'block';
-            showSection('story-detail');
-        }
-
-        function printStory() {
-            window.print();
-        }
-
-        function shareStory() {
-            const url = window.location.href;
-            const text = "Подивіться цю чудову казку для Соломії: ";
-            const facebookShare = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-            const instagramShare = `https://www.instagram.com/?url=${url}`;
-            const telegramShare = `https://telegram.me/share/url?url=${url}&text=${text}`;
-            window.open(facebookShare, '_blank');
-            window.open(instagramShare, '_blank');
-            window.open(telegramShare, '_blank');
-        }
-    </script>
+    <script src="js/script.js"></script>
 </body>
 </html>
