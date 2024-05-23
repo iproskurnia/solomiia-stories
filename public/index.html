@@ -1,1 +1,128 @@
-<!-- dsdsdsd -->
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Казки для Соломії</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #6ab04c;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        main {
+            padding: 20px;
+        }
+        .story {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .story h2 {
+            margin-top: 0;
+        }
+        .story img {
+            max-width: 100%;
+            height: auto;
+        }
+        .buttons {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .buttons button {
+            background-color: #6ab04c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .buttons button:hover {
+            background-color: #58a338;
+        }
+        .prompt-input, .file-input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Казки для Соломії</h1>
+    </header>
+    <main>
+        <div class="story">
+            <h2>Приклад Казки</h2>
+            <input type="text" id="prompt" class="prompt-input" placeholder="Введіть опис для генерації зображення" />
+            <input type="file" id="image" class="file-input" accept="image/*" />
+            <img id="story-img" src="example.jpg" alt="Приклад ілюстрації">
+            <p>Це приклад казки для Соломії. Коли будуть нові історії, вони з’являться тут.</p>
+            <div class="buttons">
+                <button onclick="printStory()">Друкувати</button>
+                <button onclick="shareStory()">Поширити</button>
+                <button onclick="generateImage()">Згенерувати зображення</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const imageInput = document.getElementById('image');
+            const formData = new FormData();
+
+            formData.append('prompt', prompt);
+            if (imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            }
+
+            if (!prompt) {
+                alert('Будь ласка, введіть опис для генерації зображення.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/generate-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.imageUrl) {
+                    document.getElementById('story-img').src = data.imageUrl;
+                } else {
+                    alert('Не вдалося згенерувати зображення');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Сталася помилка');
+            }
+        }
+
+        function printStory() {
+            window.print();
+        }
+
+        function shareStory() {
+            const url = window.location.href;
+            const text = "Подивіться цю чудову казку для Соломії: ";
+            const facebookShare = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+            const instagramShare = `https://www.instagram.com/?url=${url}`;
+            const telegramShare = `https://telegram.me/share/url?url=${url}&text=${text}`;
+            window.open(facebookShare, '_blank');
+            window.open(instagramShare, '_blank');
+            window.open(telegramShare, '_blank');
+        }
+    </script>
+</body>
+</html>
