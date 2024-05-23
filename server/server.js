@@ -18,19 +18,37 @@ app.use(bodyParser.json());
 
 const upload = multer({ dest: 'uploads/' });
 
-app.post('/generate-image', upload.single('image'), async (req, res) => {
-    const prompt = req.body.prompt;
+app.post('/generate-story', upload.single('image'), async (req, res) => {
+    const storyPrompt = req.body.prompt;
+    const imagePrompt = req.body.imagePrompt;
     const imagePath = req.file ? req.file.path : null;
 
     try {
+        const storyResponse = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
+            prompt: storyPrompt,
+            max_tokens: 500
+        }, {
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const story = storyResponse.data.choices[0].text.trim();
+
         const imageBase64 = imagePath ? fs.readFileSync(imagePath, 'base64') : null;
 
-        const response = await axios.post('https://api.openai.com/v1/images/generations', {
-            prompt: prompt,
+        const imageData = {
+            prompt: imagePrompt,
             n: 1,
-            size: "1024x1024",
-            input_image: imageBase64 // Assuming the API can handle base64 image input directly
-        }, {
+            size: "1024x1024"
+        };
+
+        if (imageBase64) {
+            imageData.input_image = imageBase64;
+        }
+
+        const imageResponse = await axios.post('https://api.openai.com/v1/images/generations', imageData, {
             headers: {
                 'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json'
@@ -41,11 +59,12 @@ app.post('/generate-image', upload.single('image'), async (req, res) => {
             fs.unlinkSync(imagePath);
         }
 
-        const imageUrl = response.data.data[0].url;
-        res.json({ imageUrl });
+        const imageUrl = imageResponse.data.data[0].url;
+
+        res.json({ title: storyPrompt, story, imageUrl });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Failed to generate image' });
+        res.status(500).json({ error: 'Failed to generate story or image' });
     }
 });
 
